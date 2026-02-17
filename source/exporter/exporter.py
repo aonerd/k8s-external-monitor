@@ -70,15 +70,22 @@ node_mem_cap = Gauge(
 )
 
 # Kubernetes events
+EVENT_LABELS = ["namespace", "kind", "name", "reason", "type", "message"]
+
 event_count = Gauge(
     "kube_event_count",
     "Kubernetes event count",
-    ["namespace", "kind", "name", "reason", "type"],
+    EVENT_LABELS,
 )
 event_last_seen = Gauge(
     "kube_event_last_seen_timestamp",
     "Timestamp of last seen event",
-    ["namespace", "kind", "name", "reason", "type"],
+    EVENT_LABELS,
+)
+event_first_seen = Gauge(
+    "kube_event_first_seen_timestamp",
+    "Timestamp of first seen event",
+    EVENT_LABELS,
 )
 
 # ---------------------------------------------------------------------------
@@ -352,21 +359,27 @@ def collect_metrics(custom_api: client.CustomObjectsApi, core_v1: client.CoreV1A
     # --- Events (list all current events each cycle) ---
     event_count._metrics.clear()
     event_last_seen._metrics.clear()
+    event_first_seen._metrics.clear()
     try:
         events = core_v1.list_event_for_all_namespaces()
         for ev in events.items:
+            msg = (ev.message or "")[:200]  # truncate to keep labels reasonable
             labels = {
                 "namespace": ev.metadata.namespace or "",
                 "kind": ev.involved_object.kind if ev.involved_object else "",
                 "name": ev.involved_object.name if ev.involved_object else "",
                 "reason": ev.reason or "",
                 "type": ev.type or "",
+                "message": msg,
             }
             count = ev.count if ev.count else 1
             event_count.labels(**labels).set(count)
-            ts = ev.last_timestamp or ev.event_time
-            if ts:
-                event_last_seen.labels(**labels).set(ts.timestamp())
+            last_ts = ev.last_timestamp or ev.event_time
+            if last_ts:
+                event_last_seen.labels(**labels).set(last_ts.timestamp() * 1000)
+            first_ts = ev.first_timestamp or ev.event_time
+            if first_ts:
+                event_first_seen.labels(**labels).set(first_ts.timestamp() * 1000)
         log.debug("Collected %d events", len(events.items))
     except Exception:
         log.exception("Failed to collect events")

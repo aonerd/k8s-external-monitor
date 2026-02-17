@@ -7,11 +7,24 @@
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": {
         "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] } },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Last Seen" },
+            "properties": [{ "id": "unit", "value": "dateTimeFromNow" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "First Seen" },
+            "properties": [{ "id": "unit", "value": "dateTimeFromNow" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Message" },
+            "properties": [{ "id": "custom.width", "value": 400 }]
+          }
+        ]
       },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "options": { "showHeader": true, "sortBy": [{ "desc": true, "displayName": "Count" }] },
+      "options": { "showHeader": true, "sortBy": [{ "desc": true, "displayName": "Last Seen" }] },
       "title": "Recent Events ($namespace)",
       "type": "table",
       "targets": [
@@ -20,15 +33,31 @@
           "format": "table",
           "instant": true,
           "refId": "A"
+        },
+        {
+          "expr": "kube_event_last_seen_timestamp{namespace=~\"$namespace\",name=~\"$object\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "kube_event_first_seen_timestamp{namespace=~\"$namespace\",name=~\"$object\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
         }
       ],
       "transformations": [
         {
+          "id": "merge",
+          "options": {}
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true },
-            "renameByName": { "Value": "Count", "namespace": "Namespace", "kind": "Kind", "name": "Name", "reason": "Reason", "type": "Type" },
-            "indexByName": { "Namespace": 0, "Kind": 1, "Name": 2, "Reason": 3, "Type": 4, "Count": 5 }
+            "renameByName": { "Value #A": "Count", "Value #B": "Last Seen", "Value #C": "First Seen", "namespace": "Namespace", "kind": "Kind", "name": "Name", "reason": "Reason", "type": "Type", "message": "Message" },
+            "indexByName": { "Namespace": 0, "Kind": 1, "Name": 2, "Type": 3, "Reason": 4, "Message": 5, "Count": 6, "Last Seen": 7, "First Seen": 8 }
           }
         }
       ]
@@ -39,7 +68,7 @@
         "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisBorderShow": false, "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" } },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
       "id": 2,
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Event Count by Type ($namespace)",
@@ -58,7 +87,7 @@
         "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisBorderShow": false, "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" } },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
       "id": 3,
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Warning Events by Reason ($namespace)",
@@ -95,7 +124,7 @@
         "multi": true,
         "name": "object",
         "label": "Object",
-        "query": { "query": "label_values(kube_event_count{namespace=~\"$namespace\",name=~\"$object\"}, name)", "refId": "A" },
+        "query": { "query": "label_values(kube_event_count{namespace=~\"$namespace\"}, name)", "refId": "A" },
         "refresh": 2,
         "type": "query"
       }
