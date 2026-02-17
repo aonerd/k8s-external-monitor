@@ -16,7 +16,7 @@
       "type": "table",
       "targets": [
         {
-          "expr": "topk(50, kube_event_count{namespace=~\"$namespace\"})",
+          "expr": "topk(50, kube_event_count{namespace=~\"$namespace\",name=~\"$object\"})",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -46,7 +46,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(kube_event_count{namespace=~\"$namespace\"}) by (type)",
+          "expr": "sum(kube_event_count{namespace=~\"$namespace\",name=~\"$object\"}) by (type)",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
@@ -83,6 +83,18 @@
         "includeAll": true,
         "name": "namespace",
         "query": { "query": "label_values(kube_event_count, namespace)", "refId": "A" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+        "definition": "label_values(kube_event_count{namespace=~\"$namespace\",name=~\"$object\"}, name)",
+        "includeAll": true,
+        "multi": true,
+        "name": "object",
+        "label": "Object",
+        "query": { "query": "label_values(kube_event_count{namespace=~\"$namespace\",name=~\"$object\"}, name)", "refId": "A" },
         "refresh": 2,
         "type": "query"
       }

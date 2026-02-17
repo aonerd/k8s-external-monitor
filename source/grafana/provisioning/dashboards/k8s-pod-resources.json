@@ -16,7 +16,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -35,7 +35,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(kube_metrics_pod_memory_usage_bytes{namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_metrics_pod_memory_usage_bytes{namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -54,17 +54,17 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}} usage",
           "refId": "A"
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\",namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\",namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}} request",
           "refId": "B"
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits{resource=\"cpu\",namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits{resource=\"cpu\",namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}} limit",
           "refId": "C"
         }
@@ -83,17 +83,17 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(kube_metrics_pod_memory_usage_bytes{namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_metrics_pod_memory_usage_bytes{namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}} usage",
           "refId": "A"
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests{resource=\"memory\",namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests{resource=\"memory\",namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}} request",
           "refId": "B"
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits{resource=\"memory\",namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits{resource=\"memory\",namespace=~\"$namespace\",pod=~\"$pod\"}) by (pod)",
           "legendFormat": "{{pod}} limit",
           "refId": "C"
         }
@@ -112,7 +112,7 @@
       "type": "table",
       "targets": [
         {
-          "expr": "kube_pod_container_status_restarts_total{namespace=~\"$namespace\"}",
+          "expr": "kube_pod_container_status_restarts_total{namespace=~\"$namespace\",pod=~\"$pod\"}",
           "legendFormat": "",
           "refId": "A",
           "format": "table",
@@ -141,6 +141,17 @@
         "includeAll": true,
         "name": "namespace",
         "query": { "query": "label_values(kube_pod_info, namespace)", "refId": "A" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+        "definition": "label_values(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\",pod=~\"$pod\"}, pod)",
+        "includeAll": true,
+        "multi": true,
+        "name": "pod",
+        "query": { "query": "label_values(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\",pod=~\"$pod\"}, pod)", "refId": "A" },
         "refresh": 2,
         "type": "query"
       }

@@ -16,12 +16,12 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"$namespace\"}",
+          "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\"}",
           "legendFormat": "{{horizontalpodautoscaler}} current",
           "refId": "A"
         },
         {
-          "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=~\"$namespace\"}",
+          "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\"}",
           "legendFormat": "{{horizontalpodautoscaler}} desired",
           "refId": "B"
         }
@@ -40,17 +40,17 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "kube_horizontalpodautoscaler_spec_min_replicas{namespace=~\"$namespace\"}",
+          "expr": "kube_horizontalpodautoscaler_spec_min_replicas{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\"}",
           "legendFormat": "{{horizontalpodautoscaler}} min",
           "refId": "A"
         },
         {
-          "expr": "kube_horizontalpodautoscaler_spec_max_replicas{namespace=~\"$namespace\"}",
+          "expr": "kube_horizontalpodautoscaler_spec_max_replicas{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\"}",
           "legendFormat": "{{horizontalpodautoscaler}} max",
           "refId": "B"
         },
         {
-          "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"$namespace\"}",
+          "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\"}",
           "legendFormat": "{{horizontalpodautoscaler}} current",
           "refId": "C"
         }
@@ -69,7 +69,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"$namespace\",metric_name=\"cpu\"}",
+          "expr": "kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\",metric_name=\"cpu\"}",
           "legendFormat": "{{horizontalpodautoscaler}} target",
           "refId": "A"
         },
@@ -93,7 +93,7 @@
       "type": "table",
       "targets": [
         {
-          "expr": "kube_horizontalpodautoscaler_status_condition{namespace=~\"$namespace\",status=\"true\"}",
+          "expr": "kube_horizontalpodautoscaler_status_condition{namespace=~\"$namespace\",horizontalpodautoscaler=~\"$hpa\",status=\"true\"}",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -120,6 +120,18 @@
         "includeAll": true,
         "name": "namespace",
         "query": { "query": "label_values(kube_horizontalpodautoscaler_info, namespace)", "refId": "A" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+        "definition": "label_values(kube_horizontalpodautoscaler_info{namespace=~\"$namespace\"}, horizontalpodautoscaler)",
+        "includeAll": true,
+        "multi": true,
+        "name": "hpa",
+        "label": "HPA",
+        "query": { "query": "label_values(kube_horizontalpodautoscaler_info{namespace=~\"$namespace\"}, horizontalpodautoscaler)", "refId": "A" },
         "refresh": 2,
         "type": "query"
       }
