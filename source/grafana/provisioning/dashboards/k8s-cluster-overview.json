@@ -20,7 +20,7 @@
       "type": "stat",
       "targets": [
         {
-          "expr": "100 * sum(rate(container_cpu_usage_seconds_total{container!=\"\",container!=\"POD\"}[5m])) / sum(machine_cpu_cores)",
+          "expr": "100 * sum(kube_metrics_pod_cpu_usage_cores) / sum(kube_metrics_node_cpu_capacity_cores)",
           "legendFormat": "CPU Usage %",
           "refId": "A"
         }
@@ -39,7 +39,7 @@
       "type": "stat",
       "targets": [
         {
-          "expr": "100 * sum(container_memory_working_set_bytes{container!=\"\",container!=\"POD\"}) / sum(machine_memory_bytes)",
+          "expr": "100 * sum(kube_metrics_pod_memory_usage_bytes) / sum(kube_metrics_node_memory_capacity_bytes)",
           "legendFormat": "Memory Usage %",
           "refId": "A"
         }
@@ -96,7 +96,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "100 * sum(rate(container_cpu_usage_seconds_total{container!=\"\",container!=\"POD\"}[5m])) by (namespace) / scalar(sum(machine_cpu_cores))",
+          "expr": "100 * sum(kube_metrics_pod_cpu_usage_cores) by (namespace) / scalar(sum(kube_metrics_node_cpu_capacity_cores))",
           "legendFormat": "{{namespace}}",
           "refId": "A"
         }
@@ -115,7 +115,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{container!=\"\",container!=\"POD\"}) by (namespace)",
+          "expr": "sum(kube_metrics_pod_memory_usage_bytes) by (namespace)",
           "legendFormat": "{{namespace}}",
           "refId": "A"
         }

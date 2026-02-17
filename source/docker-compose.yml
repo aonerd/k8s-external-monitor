@@ -7,9 +7,19 @@ services:
       - --telemetry-port=8081
     volumes:
       - ./secrets/kubeconfig:/etc/kubeconfig/config:ro
-    ports:
-      - "8080:8080"
-      - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  k8s-metrics-exporter:
+    build: ./exporter
+    volumes:
+      - ./secrets/kubeconfig:/etc/kubeconfig/config:ro
+    environment:
+      - KUBECONFIG=/etc/kubeconfig/config
+      - POLL_INTERVAL_SECONDS=30
+      - EXPORTER_PORT=9101
+      - LOG_LEVEL=INFO
     restart: unless-stopped
     networks:
       - monitoring
@@ -18,21 +28,16 @@ services:
     image: prom/prometheus:v2.53.0
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./secrets/token:/etc/prometheus/token:ro
-      - ./secrets/ca.crt:/etc/prometheus/ca.crt:ro
-      - ./secrets/client.crt:/etc/prometheus/client.crt:ro
-      - ./secrets/client.key:/etc/prometheus/client.key:ro
-      - ./secrets/kubeconfig:/etc/prometheus/kubeconfig:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=30d
-      - --web.enable-lifecycle
     restart: unless-stopped
     depends_on:
       - kube-state-metrics
+      - k8s-metrics-exporter
     networks:
       - monitoring
 
@@ -42,7 +47,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin

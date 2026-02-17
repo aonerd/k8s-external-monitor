@@ -16,7 +16,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "100 * sum(rate(container_cpu_usage_seconds_total{container!=\"\",container!=\"POD\"}[5m])) by (node) / on(node) group_left() machine_cpu_cores",
+          "expr": "100 * sum(kube_metrics_pod_cpu_usage_cores) by (node) / on(node) group_left() kube_metrics_node_cpu_capacity_cores",
           "legendFormat": "{{node}}",
           "refId": "A"
         }
@@ -35,7 +35,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "100 * sum(container_memory_working_set_bytes{container!=\"\",container!=\"POD\"}) by (node) / on(node) group_left() machine_memory_bytes",
+          "expr": "100 * sum(kube_metrics_pod_memory_usage_bytes) by (node) / on(node) group_left() kube_metrics_node_memory_capacity_bytes",
           "legendFormat": "{{node}}",
           "refId": "A"
         }
@@ -59,7 +59,7 @@
           "refId": "A"
         },
         {
-          "expr": "machine_cpu_cores",
+          "expr": "kube_metrics_node_cpu_capacity_cores",
           "legendFormat": "{{node}} capacity",
           "refId": "B"
         }
@@ -83,7 +83,7 @@
           "refId": "A"
         },
         {
-          "expr": "machine_memory_bytes",
+          "expr": "kube_metrics_node_memory_capacity_bytes",
           "legendFormat": "{{node}} capacity",
           "refId": "B"
         }
