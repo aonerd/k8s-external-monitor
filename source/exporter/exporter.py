@@ -11,11 +11,10 @@ import os
 import re
 import signal
 import sys
-import threading
 import time
 
-from kubernetes import client, config, watch
-from prometheus_client import Counter, Gauge, start_http_server
+from kubernetes import client, config
+from prometheus_client import Gauge, start_http_server
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -71,7 +70,7 @@ node_mem_cap = Gauge(
 )
 
 # Kubernetes events
-event_count = Counter(
+event_count = Gauge(
     "kube_event_count",
     "Kubernetes event count",
     ["namespace", "kind", "name", "reason", "type"],
@@ -350,36 +349,27 @@ def collect_metrics(custom_api: client.CustomObjectsApi, core_v1: client.CoreV1A
     except Exception:
         log.exception("Failed to collect node metrics")
 
-
-# ---------------------------------------------------------------------------
-# Event watcher (runs in a daemon thread)
-# ---------------------------------------------------------------------------
-def watch_events(core_v1: client.CoreV1Api, stop_event: threading.Event):
-    """Watch Kubernetes events and increment counters."""
-    w = watch.Watch()
-    while not stop_event.is_set():
-        try:
-            log.info("Starting event watch stream")
-            for ev in w.stream(core_v1.list_event_for_all_namespaces, timeout_seconds=300):
-                if stop_event.is_set():
-                    break
-                obj = ev["object"]
-                labels = {
-                    "namespace": obj.metadata.namespace or "",
-                    "kind": obj.involved_object.kind if obj.involved_object else "",
-                    "name": obj.involved_object.name if obj.involved_object else "",
-                    "reason": obj.reason or "",
-                    "type": obj.type or "",
-                }
-                count = obj.count if obj.count else 1
-                event_count.labels(**labels).inc(count)
-                if obj.last_timestamp:
-                    event_last_seen.labels(**labels).set(obj.last_timestamp.timestamp())
-        except Exception:
-            if stop_event.is_set():
-                break
-            log.exception("Event watch error, reconnecting in 10s")
-            time.sleep(10)
+    # --- Events (list all current events each cycle) ---
+    event_count._metrics.clear()
+    event_last_seen._metrics.clear()
+    try:
+        events = core_v1.list_event_for_all_namespaces()
+        for ev in events.items:
+            labels = {
+                "namespace": ev.metadata.namespace or "",
+                "kind": ev.involved_object.kind if ev.involved_object else "",
+                "name": ev.involved_object.name if ev.involved_object else "",
+                "reason": ev.reason or "",
+                "type": ev.type or "",
+            }
+            count = ev.count if ev.count else 1
+            event_count.labels(**labels).set(count)
+            ts = ev.last_timestamp or ev.event_time
+            if ts:
+                event_last_seen.labels(**labels).set(ts.timestamp())
+        log.debug("Collected %d events", len(events.items))
+    except Exception:
+        log.exception("Failed to collect events")
 
 
 # ---------------------------------------------------------------------------
@@ -405,17 +395,9 @@ def main():
     start_http_server(EXPORTER_PORT)
     log.info("Prometheus metrics server listening on :%d", EXPORTER_PORT)
 
-    # Start event watcher in background
-    stop_event = threading.Event()
-    event_thread = threading.Thread(
-        target=watch_events, args=(core_v1, stop_event), daemon=True
-    )
-    event_thread.start()
-
     # Graceful shutdown
     def shutdown(signum, frame):
         log.info("Received signal %d, shutting down", signum)
-        stop_event.set()
         sys.exit(0)
 
     signal.signal(signal.SIGTERM, shutdown)
