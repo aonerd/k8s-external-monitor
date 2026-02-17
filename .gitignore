@@ -1,0 +1,36 @@
+# IDE
+
+temp/
+tmp/
+# Temp files
+
+logs/
+*.log
+# Logs
+
+config.yaml
+kubeconfig
+*.kubeconfig
+source/secrets/
+# Secrets - NEVER commit kubeconfig or extracted credentials
+
+source/prometheus/prometheus.yml
+# Generated from template by setup.sh
+
+source/grafana/data/
+source/prometheus/data/
+# Data volumes (if stored locally)
+
+docker-compose.override.yml
+# Docker
+
+.LSOverride
+.AppleDouble
+.DS_Store
+# macOS
+
+*~
+*.swo
+*.swp
+.vscode/
+.idea/

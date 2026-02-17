@@ -1,0 +1,62 @@
+services:
+  kube-state-metrics:
+    image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.14.0
+    command:
+      - --kubeconfig=/etc/kubeconfig/config
+      - --port=8080
+      - --telemetry-port=8081
+    volumes:
+      - ./secrets/kubeconfig:/etc/kubeconfig/config:ro
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./secrets/token:/etc/prometheus/token:ro
+      - ./secrets/ca.crt:/etc/prometheus/ca.crt:ro
+      - ./secrets/client.crt:/etc/prometheus/client.crt:ro
+      - ./secrets/client.key:/etc/prometheus/client.key:ro
+      - ./secrets/kubeconfig:/etc/prometheus/kubeconfig:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+    restart: unless-stopped
+    depends_on:
+      - kube-state-metrics
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  monitoring:
+    driver: bridge
