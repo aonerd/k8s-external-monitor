@@ -89,7 +89,8 @@
       {
         "current": { "selected": false, "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-        "definition": "label_values(kube_event_count{namespace=~\"$namespace\",name=~\"$object\"}, name)",
+        "definition": "label_values(kube_event_count{namespace=~\"$namespace\"}, name)",
+        "allValue": ".*",
         "includeAll": true,
         "multi": true,
         "name": "object",

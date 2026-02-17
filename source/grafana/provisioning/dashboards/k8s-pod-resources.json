@@ -147,11 +147,12 @@
       {
         "current": { "selected": false, "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-        "definition": "label_values(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\",pod=~\"$pod\"}, pod)",
+        "definition": "label_values(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\"}, pod)",
+        "allValue": ".*",
         "includeAll": true,
         "multi": true,
         "name": "pod",
-        "query": { "query": "label_values(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\",pod=~\"$pod\"}, pod)", "refId": "A" },
+        "query": { "query": "label_values(kube_metrics_pod_cpu_usage_cores{namespace=~\"$namespace\"}, pod)", "refId": "A" },
         "refresh": 2,
         "type": "query"
       }

@@ -127,6 +127,7 @@
         "current": { "selected": false, "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
         "definition": "label_values(kube_horizontalpodautoscaler_info{namespace=~\"$namespace\"}, horizontalpodautoscaler)",
+        "allValue": ".*",
         "includeAll": true,
         "multi": true,
         "name": "hpa",
